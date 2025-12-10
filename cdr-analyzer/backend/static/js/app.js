@@ -1,5 +1,10 @@
 // Configuration
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+// Dynamically set API base URL based on the requested domain
+const API_BASE_URL = (() => {
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    return `${protocol}//${host}/api/v1`;
+})();
 
 // State
 let currentPage = 1;
