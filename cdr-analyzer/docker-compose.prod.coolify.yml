@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  cdr-analyzer:
+    # Use specific image built for production
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=production
+
+    # Container naming for Coolify
+    container_name: cdr-analyzer-prod
+
+    # Production port mapping
+    ports:
+      - "8000:8000"
+
+    # Production volumes: only persistent data
+    volumes:
+      - cdr-data:/app/data
+      - cdr-logs:/app/logs
+
+    # Environment variables for production
+    environment:
+      # Core Configuration
+      - ENVIRONMENT=production
+      - DATABASE_PATH=/app/data/cdr.db
+      - PYTHONUNBUFFERED=1
+
+      # Security
+      - SECURE_COOKIES=true
+      - CSRF_ENABLED=true
+
+      # Performance
+      - WORKERS=4
+      - WORKER_TIMEOUT=120
+
+      # Logging
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/app/logs/cdr-analyzer.log
+
+    # Restart policy for production
+    restart: always
+
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/calls"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    # Resource limits for production stability
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+    # Logging configuration for production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+        labels: "service=cdr-analyzer,environment=production"
+
+    # Coolify labels for monitoring and management
+    labels:
+      - "coolify.managed=true"
+      - "service=cdr-analyzer"
+      - "environment=production"
+
+# Named volumes for persistent data
+volumes:
+  cdr-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/cdr-analyzer/cdr-data
+
+  cdr-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/cdr-analyzer/logs
+
+# Network configuration for Coolify
+networks:
+  default:
+    name: coolify-network
+    external: false
+

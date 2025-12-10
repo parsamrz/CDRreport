@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  cdr-analyzer:
+    build: ./backend
+    container_name: cdr-analyzer
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - cdr-data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/cdr.db
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/calls"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  cdr-data:
