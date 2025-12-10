@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  cdr-analyzer:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cdr-analyzer
+    ports:
+      - "8000:8000"
+    volumes:
+      # Production: Only data volume, no code mounting
+      - cdr-data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/cdr.db
+      - PYTHONUNBUFFERED=1
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/calls"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  cdr-data:
+    driver: local

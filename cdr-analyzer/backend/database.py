@@ -142,3 +142,29 @@ def get_calls(conn: sqlite3.Connection,
     calls = [dict(row) for row in cursor.fetchall()]
     
     return calls, total
+
+def clear_all_data(conn: sqlite3.Connection) -> int:
+    """
+    Clear all data from call_records table
+    Returns the number of records deleted
+    """
+    cursor = conn.cursor()
+    
+    # Get count before deletion
+    cursor.execute("SELECT COUNT(*) FROM call_records")
+    count = cursor.fetchone()[0]
+    
+    # Delete all records
+    cursor.execute("DELETE FROM call_records")
+    
+    # Reset autoincrement if sqlite_sequence table exists
+    try:
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='call_records'")
+    except sqlite3.OperationalError:
+        # Table doesn't exist, which is fine
+        pass
+    
+    conn.commit()
+    
+    print(f"✅ Database cleared: {count} records deleted")
+    return count

@@ -138,8 +138,37 @@ def process_cdr_file(file_content: bytes) -> Tuple[List[Dict], int, int]:
                 # Remove .0 suffix from float representation
                 if caller_number.endswith('.0'):
                     caller_number = caller_number[:-2]
+                
+                # Remove + prefix if present (international format)
+                if caller_number.startswith('+'):
+                    caller_number = caller_number[1:]
+                
+                # FILTER OUT OUTGOING CALLS:
+                # Skip calls where Source is an extension number (3 digits like 101, 102, 103)
+                # Only count INCOMING calls where Source is a real phone number
+                if caller_number and len(caller_number) <= 3 and caller_number.isdigit():
+                    # This is an outgoing call (Source is extension), skip it
+                    continue
+                
+                # Validate phone number format for INCOMING calls:
+                # Accept multiple formats:
+                # 1. Mobile national: 9XXXXXXXXX (10-11 digits starting with 9)
+                # 2. Mobile international: 98XXXXXXXXXX (12 digits starting with 98)
+                # 3. Landline with 0: 0XXXXXXXXX (8-11 digits starting with 0, like 011..., 044...)
+                # 4. Landline without 0: XXXXXXXX (7-10 digits, pandas strips leading 0 from floats)
+                if caller_number and caller_number.isdigit():
+                    is_valid_mobile_national = caller_number.startswith('9') and 10 <= len(caller_number) <= 11
+                    is_valid_mobile_international = caller_number.startswith('98') and len(caller_number) == 12
+                    is_valid_landline_with_zero = caller_number.startswith('0') and 8 <= len(caller_number) <= 11
+                    is_valid_landline_no_zero = 7 <= len(caller_number) <= 10 and not caller_number.startswith('9')
+                    
+                    if not (is_valid_mobile_national or is_valid_mobile_international or is_valid_landline_with_zero or is_valid_landline_no_zero):
+                        # Invalid phone number format, skip
+                        continue
             else:
-                caller_number = None
+                # No Source field means no caller number - skip this record
+                # (these are likely internal calls or system records)
+                continue
             timestamp = normalize_timestamp(first_record['Date'])
             
             if not timestamp:
