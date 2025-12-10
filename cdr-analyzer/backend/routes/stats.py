@@ -4,7 +4,7 @@ Statistics endpoints for dashboard visualization
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
 from datetime import datetime, timedelta
-from models import StatsResponse, DailyStats, ExtensionStats
+from models import StatsResponse, DailyStats, ExtensionStats, UniqueCallersStats
 from database import get_db
 
 router = APIRouter()
@@ -104,6 +104,56 @@ async def get_extension_stats(
             ]
             
             return extension_stats
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/stats/unique-callers", response_model=list[UniqueCallersStats])
+async def get_unique_callers_stats(
+    from_date: Optional[str] = Query(None, description="Start date (ISO format)"),
+    to_date: Optional[str] = Query(None, description="End date (ISO format)")
+):
+    """
+    Get unique callers statistics per day
+    Counts distinct caller numbers - each phone number is counted once per day
+    regardless of how many times they called
+    """
+    try:
+        # Default to last 7 days if no dates provided
+        if not from_date:
+            from_date = (datetime.now() - timedelta(days=7)).isoformat()
+        if not to_date:
+            to_date = datetime.now().isoformat()
+        
+        with get_db() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    DATE(timestamp) as call_date,
+                    COUNT(DISTINCT caller_number) as unique_callers,
+                    COUNT(*) as total_calls
+                FROM call_records
+                WHERE DATE(timestamp) >= DATE(?)
+                    AND DATE(timestamp) <= DATE(?)
+                    AND caller_number IS NOT NULL
+                    AND caller_number != ''
+                GROUP BY DATE(timestamp)
+                ORDER BY call_date ASC
+            """, (from_date, to_date))
+            
+            results = cursor.fetchall()
+            
+            unique_callers_stats = [
+                UniqueCallersStats(
+                    date=row['call_date'],
+                    unique_callers=row['unique_callers'],
+                    total_calls=row['total_calls']
+                )
+                for row in results
+            ]
+            
+            return unique_callers_stats
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

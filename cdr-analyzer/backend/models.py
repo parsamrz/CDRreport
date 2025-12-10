@@ -54,6 +54,12 @@ class ExtensionStats(BaseModel):
     total_duration: int
     avg_duration: float
 
+class UniqueCallersStats(BaseModel):
+    """Unique callers statistics model"""
+    date: str = Field(..., description="Date in ISO format (YYYY-MM-DD)")
+    unique_callers: int = Field(..., description="Count of distinct caller numbers")
+    total_calls: int = Field(..., description="Total number of calls for comparison")
+
 class StatsResponse(BaseModel):
     """Response model for statistics"""
     daily_stats: Optional[List[DailyStats]] = None
