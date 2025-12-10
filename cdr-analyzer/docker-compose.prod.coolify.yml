@@ -17,8 +17,8 @@ services:
     working_dir: /app
 
     # Production port mapping
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
 
     # Production volumes: only persistent data
     volumes:
