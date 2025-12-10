@@ -1,5 +1,8 @@
 version: '3.8'
 
+# Working directory for this compose file is cdr-analyzer/
+# All relative paths are resolved from cdr-analyzer/
+
 services:
   cdr-analyzer:
     # Use specific image built for production
@@ -11,6 +14,7 @@ services:
 
     # Container naming for Coolify
     container_name: cdr-analyzer-prod
+    working_dir: /app
 
     # Production port mapping
     ports:

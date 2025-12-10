@@ -1,9 +1,14 @@
 version: '3.8'
 
+# Development compose file
+# Working directory: cdr-analyzer/
+# All paths are relative to cdr-analyzer/
+
 services:
   cdr-analyzer:
     build: ./backend
     container_name: cdr-analyzer
+    working_dir: /app
     ports:
       - "8000:8000"
     volumes:

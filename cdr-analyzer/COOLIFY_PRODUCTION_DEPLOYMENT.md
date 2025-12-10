@@ -14,11 +14,27 @@ This guide provides step-by-step instructions for deploying the CDR Analyzer to 
 ## Directory Structure
 
 ```
+Project Root (CDRreport/)
+├── cdr-analyzer/               # This directory (contains docker-compose)
+│   ├── backend/                # Backend source code
+│   │   ├── Dockerfile          # Backend container image
+│   │   ├── main.py
+│   │   ├── requirements.txt
+│   │   └── ...
+│   ├── frontend/
+│   ├── docker-compose.prod.coolify.yml
+│   ├── .env.production
+│   └── ...
+└── ...
+
+Production Server Data Directories:
 /data/cdr-analyzer/
 ├── cdr-data/          # Persistent database volume
 ├── logs/              # Application logs
 └── config/            # Configuration files
 ```
+
+**Important**: The `docker-compose.prod.coolify.yml` file is located in the `cdr-analyzer/` directory and uses `./backend` as the build context to correctly reference the backend source code.
 
 ## Deployment Steps
 

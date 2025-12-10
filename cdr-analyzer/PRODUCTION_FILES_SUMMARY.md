@@ -66,6 +66,20 @@ This document lists all production-ready files created for Coolify deployment.
 ## Directory Structure for Production
 
 ```
+Project Structure (Source Code):
+CDRreport/ (project root)
+└── cdr-analyzer/
+    ├── backend/
+    │   ├── Dockerfile          ← Build target
+    │   ├── main.py
+    │   ├── requirements.txt
+    │   └── ...
+    ├── frontend/
+    ├── docker-compose.prod.coolify.yml  ← Build context: ./backend
+    ├── .env.production
+    └── ...
+
+Production Server Data Directories:
 /data/cdr-analyzer/
 ├── cdr-data/          # SQLite database volume
 ├── logs/              # Application logs
@@ -75,6 +89,11 @@ This document lists all production-ready files created for Coolify deployment.
 ├── cdr.db.backup.*    # Database backups
 └── logs-*.tar.gz      # Log archives
 ```
+
+**Build Context**: The `docker-compose.prod.coolify.yml` uses `./backend` as the build context because:
+- The compose file location: `cdr-analyzer/docker-compose.prod.coolify.yml`
+- The Dockerfile location: `cdr-analyzer/backend/Dockerfile`
+- Relative path: `./backend`
 
 ## Quick Start for Production
 
